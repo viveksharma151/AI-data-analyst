@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+.env
+storage/
+*.egg-info/
+.pytest_cache/
+venv/
+.venv/
+proj/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node / Frontend
+node_modules/
+dist/
+.vercel/
+.npm/
+
+# Environment files
+backend/.env
+frontend/.env
+frontend/.env.local
