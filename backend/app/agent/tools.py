@@ -19,12 +19,13 @@ logger = get_logger(__name__)
 def generate_sql(question: str, schema_summary: str, history: list[dict]) -> str:
     """Ask the LLM to write a DuckDB-flavoured SQL query grounded in the real schema."""
     system = (
-        "You are a senior data analyst. Write a single valid DuckDB SQL query that answers "
-        "the user's question, using ONLY the tables/columns listed in the schema below. "
-        "Never invent column names. Always SELECT the actual metric/aggregate value(s) needed "
-        "to answer the question (e.g. include SUM(revenue) AS total_revenue), not just the "
-        "grouping/label column -- the result must contain enough detail to state a concrete answer. "
-        "Return ONLY the SQL query, no explanation, no markdown fences."
+        "You are a senior data analyst writing DuckDB SQL queries.\n"
+        "Rules:\n"
+        "1. Write a single valid DuckDB SELECT SQL query that answers the user's question, using ONLY the tables/columns listed in the schema below.\n"
+        "2. Never invent column names. Always SELECT the actual metric/aggregate value(s) needed.\n"
+        "3. Return ONLY the raw SQL query, no explanation, no markdown fences.\n"
+        "4. If the question CANNOT be answered because required metrics/columns (e.g. sales, revenue, orders) are missing from the schema, respond EXACTLY in this format:\n"
+        "CANNOT_ANSWER: <clear, helpful explanation of what columns are missing and what is needed>\n"
         f"\n\nSchema:\n{schema_summary}"
     )
     messages = [{"role": "system", "content": system}]
@@ -93,10 +94,12 @@ def generate_insight_summary(
             "The data below is a preview/sample from the full dataset (not the complete dataset)."
         )
     system = (
-        "You are a business data analyst. Answer the user's question using ONLY the data preview "
+        "You are an executive business data analyst. Answer the user's question using ONLY the data preview "
         f"provided. {context_note} Be concrete: cite actual numbers and names from the data. "
-        "Keep it to 3-6 sentences unless the user asked for more detail. Explain the reasoning "
-        "briefly, don't just state a number."
+        "Format your answer professionally and cleanly:\n"
+        "- Start with a clear 1-2 sentence executive summary highlighting the key takeaway and bolding metrics (e.g. **₹5,525.00**).\n"
+        "- Use bullet points (- ) to break down findings, comparisons, or supporting details instead of one dense paragraph.\n"
+        "- Keep it clean, tidy, readable, and structured."
         f"\n\nData:\n{data_preview}"
     )
     messages = [{"role": "system", "content": system}]
@@ -117,9 +120,12 @@ def summarize_anomalies(question: str, anomaly_result: dict) -> str:
     preview = "\n".join(lines)
 
     system = (
-        "You are a data analyst explaining detected anomalies to a business user in plain language. "
-        "Summarize the pattern across the flagged rows below, and explain plausible business reasons "
-        "for the outliers (e.g. bulk order, data entry error, seasonal spike). Be concise."
+        "You are an executive data analyst explaining detected anomalies to a business user in plain language. "
+        "Format your answer cleanly:\n"
+        "- Provide a brief 1-line overview stating how many and what types of anomalies were found.\n"
+        "- Use bullet points (- ) for each key anomaly pattern or cause (e.g. bulk orders, extreme unit prices, data entry issues).\n"
+        "- Bold key numbers and category names (e.g. **₹4,500.00**, **Electronics**).\n"
+        "- Conclude with a concise 1-sentence recommendation."
     )
     messages = [
         {"role": "system", "content": system},

@@ -4,6 +4,7 @@ import PlotlyChart from './PlotlyChart';
 import SqlViewer from './SqlViewer';
 import ReasoningTrace from './ReasoningTrace';
 import AnomalyTable from './AnomalyTable';
+import FormattedAnswer from './FormattedAnswer';
 
 export default function ChatTab({
   messages,
@@ -112,10 +113,14 @@ export default function ChatTab({
                   </div>
                 )}
 
-                {/* Main text content */}
-                <div className="text-sm leading-relaxed whitespace-pre-wrap">
-                  {msg.content}
-                </div>
+                {/* Main text content with clean formatting */}
+                {msg.role === 'assistant' ? (
+                  <FormattedAnswer content={msg.content} />
+                ) : (
+                  <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                    {msg.content}
+                  </div>
+                )}
 
                 {/* Plotly Chart */}
                 {msg.chart_json && (

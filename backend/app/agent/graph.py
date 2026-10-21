@@ -29,6 +29,22 @@ def _router_node(state: AgentState) -> AgentState:
 def _make_sql_node(session: Session):
     def _sql_node(state: AgentState) -> AgentState:
         sql = tools.generate_sql(state["question"], state["schema_summary"], state.get("history", []))
+
+        # Handle case where the dataset does not have required columns
+        if sql.startswith("CANNOT_ANSWER:") or not sql.lower().strip().startswith("select"):
+            clean_explanation = sql.replace("CANNOT_ANSWER:", "").strip()
+            state["sql_query"] = None
+            state["trace"].append({
+                "step": "sql_check",
+                "detail": "Data schema does not contain the metrics required to formulate this SQL query."
+            })
+            state["final_answer"] = (
+                f"ℹ️ **Cannot run analysis on current dataset:**\n\n"
+                f"{clean_explanation}\n\n"
+                f"*Tip: Upload a sales or orders CSV (e.g. `sample_data/sales_data.csv`) that includes transaction amounts to analyze top customers by revenue.*"
+            )
+            return state
+
         state["sql_query"] = sql
         state["trace"].append({"step": "sql_generation", "detail": f"Generated query: {sql}"})
         try:
@@ -46,7 +62,7 @@ def _make_sql_node(session: Session):
             state["final_answer"] = answer
         except Exception as e:
             logger.error(f"SQL execution failed: {e}")
-            state["final_answer"] = f"I generated this SQL but it failed to run: `{sql}`\nError: {e}"
+            state["final_answer"] = f"Unable to execute generated query: `{sql}`\nReason: {e}"
         return state
 
     return _sql_node

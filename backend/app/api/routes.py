@@ -114,10 +114,15 @@ async def ask_question(payload: QuestionRequest):
     try:
         result = run_agent(session, payload.question)
     except RuntimeError as e:
-        # e.g. missing GROQ_API_KEY
-        raise HTTPException(500, str(e))
+        raise HTTPException(400, str(e))
     except Exception as e:
         logger.error(f"[{trace_id}] Agent failed: {e}")
+        err_msg = str(e)
+        if "401" in err_msg or "invalid_api_key" in err_msg.lower():
+            raise HTTPException(
+                401,
+                "Invalid or missing Groq API Key. Please add your free key to backend/.env file (GROQ_API_KEY=gsk_...) from https://console.groq.com/keys"
+            )
         raise HTTPException(500, f"Agent failed to process the question: {e}")
 
     response = QuestionResponse(
