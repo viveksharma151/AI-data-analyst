@@ -2,6 +2,16 @@
 
 An AI-powered data analyst built for comprehensive business intelligence and exploratory data analysis. Upload one or more CSV files and ask questions about them in plain English — the app answers, generates interactive charts, writes SQL, detects statistical anomalies, and explains its reasoning at every step.
 
+---
+
+### 🌐 Live Deployment & Links
+* 🚀 **Live Web Application (Vercel)**: [https://ai-data-analyst-gray.vercel.app](https://ai-data-analyst-gray.vercel.app/)
+* ⚙️ **Backend API (Render)**: [https://ai-data-analyst-7pwy.onrender.com](https://ai-data-analyst-7pwy.onrender.com)
+* 📖 **Interactive API Documentation (Swagger)**: [https://ai-data-analyst-7pwy.onrender.com/docs](https://ai-data-analyst-7pwy.onrender.com/docs)
+* 📹 **Walkthrough Demo Video**: [https://youtu.be/0D8EIElbRYA](https://youtu.be/0D8EIElbRYA)
+
+---
+
 ## Features
 
 - **Natural language Q&A** over uploaded CSV data
@@ -17,13 +27,13 @@ An AI-powered data analyst built for comprehensive business intelligence and exp
 - **PDF export** of the full analysis session
 - **Response caching** per session/question
 - **Vercel-ready Frontend** — modern React + Vite + Tailwind CSS interface optimized for edge deployment
-- **Dockerized** — one command brings up both services
+- **Dockerized** — containerized support for both backend and frontend services
 
 ## Architecture
 
 ```mermaid
 flowchart TD
-    U[User - Modern React / Vercel UI] -->|upload CSVs| API[FastAPI Backend]
+    U[User - React UI on Vercel] -->|upload CSVs| API[FastAPI Backend on Render]
     U -->|ask question| API
     API --> Router{LangGraph Router<br/>classify_intent}
     Router -->|sql intent| SQLNode[SQL Node]
@@ -37,7 +47,7 @@ flowchart TD
     ChartNode --> DuckDB
     AnomalyNode --> Pandas[Pandas + scikit-learn<br/>IQR + Isolation Forest]
 
-    SQLNode --> Groq[Groq LLM<br/>llama-3.3-70b-versatile]
+    SQLNode --> Groq[Groq LLM<br/>openai/gpt-oss-120b]
     ChartNode --> Groq
     AnomalyNode --> Groq
     InsightNode --> Groq
@@ -56,50 +66,38 @@ flowchart TD
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Frontend | React 18, Vite, Tailwind CSS, Lucide Icons (Vercel-ready) |
-| Backend | FastAPI |
-| Agent orchestration | LangGraph |
-| Data engine | DuckDB (in-memory SQL) + Pandas |
-| LLM | Groq API (`llama-3.3-70b-versatile`) |
-| Charts | Plotly (interactive charts) |
-| Anomaly detection | Per-category IQR + Isolation Forest (scikit-learn) |
-| Semantic search | TF-IDF + cosine similarity (scikit-learn) |
-| Containerization | Docker + docker-compose |
-| Testing | pytest (15/15 unit & integration tests) |
+| Layer | Technology | Deployment |
+|---|---|---|
+| Frontend | React 18, Vite, Tailwind CSS, Lucide Icons | **Vercel** ([Live App](https://ai-data-analyst-gray.vercel.app/)) |
+| Backend | FastAPI, Uvicorn, Python 3.12 | **Render** ([Live API](https://ai-data-analyst-7pwy.onrender.com)) |
+| Agent orchestration | LangGraph | Cloud Server |
+| Data engine | DuckDB (in-memory SQL) + Pandas | Cloud Server |
+| LLM | Groq API (`openai/gpt-oss-120b`) | Serverless API |
+| Charts | Plotly (interactive visualisations) | Client-side Edge |
+| Anomaly detection | Per-category IQR + Isolation Forest (scikit-learn) | Cloud Engine |
+| Semantic search | TF-IDF + cosine similarity (scikit-learn) | In-Memory Engine |
+| Containerization | Docker + docker-compose | Docker Hub / GitHub |
+| Testing | pytest (15/15 unit & integration tests) | CI / Local |
 
 ---
 
-## Deploying on Vercel
+## Production Deployment Architecture
 
-The frontend is built with React + Vite and comes with preconfigured `vercel.json` rewrites for single-click deployment on Vercel.
+The application is deployed across high-performance, free cloud infrastructure:
 
-### Step 1: Deploy Backend (FastAPI)
-Because the backend uses native C-extensions (DuckDB, scikit-learn, numpy, pandas), host the backend on a Python-friendly container platform:
-- **Render / Railway / Fly.io / Docker**:
-  1. Create a new Web Service pointing to your repository.
-  2. Set Root Directory: `backend`
-  3. Build Command: `pip install -r requirements.txt`
-  4. Start Command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-  5. Add Environment Variable:
-     - `GROQ_API_KEY`: `your_groq_api_key_here`
-  6. Copy your public backend URL (e.g., `https://ai-analyst-backend.onrender.com`).
+1. **Frontend (Vercel)**:
+   * **URL**: [https://ai-data-analyst-gray.vercel.app/](https://ai-data-analyst-gray.vercel.app/)
+   * Deployed via Vercel using `frontend/` as root with automatic SPA routing rewrites.
+   * Direct connection to Render backend via `VITE_BACKEND_URL` with in-app switcher available in header.
 
-### Step 2: Deploy Frontend on Vercel
-1. Import your repository into **Vercel** (`https://vercel.com/new`).
-2. In the project configuration:
-   - **Framework Preset**: `Vite` (automatically detected)
-   - **Root Directory**: `frontend`
-3. In **Environment Variables**:
-   - `VITE_BACKEND_URL`: `https://ai-analyst-backend.onrender.com` (your backend URL from Step 1)
-4. Click **Deploy**!
-
-> **Dynamic API Configuration:** The frontend also includes an in-app **API Settings** modal directly in the header, allowing you or any reviewer to point the frontend to any backend URL on the fly without redeploying.
+2. **Backend (Render)**:
+   * **URL**: [https://ai-data-analyst-7pwy.onrender.com](https://ai-data-analyst-7pwy.onrender.com)
+   * Swagger OpenAPI Docs: [https://ai-data-analyst-7pwy.onrender.com/docs](https://ai-data-analyst-7pwy.onrender.com/docs)
+   * Runs FastAPI with DuckDB and Scikit-Learn on Python 3.12.
 
 ---
 
-## Local Setup & Development
+## Local Setup & Development (Optional)
 
 ### Prerequisites
 
@@ -118,10 +116,6 @@ cp backend/.env.example backend/.env
 # 2. Start services
 docker-compose up --build
 ```
-
-- Backend API: http://localhost:8000
-- Frontend Web App: http://localhost:3000
-- API Docs: http://localhost:8000/docs
 
 ### Option B — Manual Setup
 
@@ -145,9 +139,6 @@ cd frontend
 npm install
 npm run dev
 ```
-Open http://localhost:3000 in your browser.
-
-*(Note: The legacy Streamlit frontend is also preserved in `frontend_streamlit/` for reference and can be run via `streamlit run frontend_streamlit/app.py`)*.
 
 ---
 
@@ -200,7 +191,7 @@ Measures classification accuracy across standard analytical question categories 
 
 ---
 
-## Implementation Notes & Design Decisions
+## Implementation Notes & Assumptions
 
 - **Anomaly detection is grouped per-category, not global** — IQR bounds are computed per `category` group so each product is evaluated against its respective peers rather than distorting bounds between inexpensive items and high-end hardware.
 - **Derived columns are handled intelligently** — dependent metrics (e.g. `revenue = quantity * unit_price`) are automatically excluded from redundant anomaly flags when base features exist, while still permitting anomaly checks on standalone revenue datasets.
